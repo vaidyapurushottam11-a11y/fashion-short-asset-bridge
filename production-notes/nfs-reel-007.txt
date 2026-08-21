@@ -1,0 +1,5 @@
+Reel 7 assembly manifest is ready at manifests/nfs-reel-007.json.
+Concept: Which polo fit looks most expensive?
+Planned duration: 8.60 seconds.
+Final output policy: silent, no audio stream.
+Asset release tag reserved: nfs-reel-007-assets.
