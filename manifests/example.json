@@ -1,0 +1,55 @@
+{
+  "reel_id": "nfs-001",
+  "output": "nfs-001-final.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "min_speed": 0.5,
+  "max_speed": 2.0,
+  "clips": [
+    {
+      "file": "look-03.mp4",
+      "source_start": 1.1,
+      "source_end": 1.8,
+      "target_seconds": 0.7,
+      "zoom": 1.12
+    },
+    {
+      "file": "look-01.mp4",
+      "source_start": 1.0,
+      "source_end": 1.7,
+      "target_seconds": 0.7,
+      "zoom": 1.0
+    },
+    {
+      "file": "look-04.mp4",
+      "source_start": 1.0,
+      "source_end": 1.7,
+      "target_seconds": 0.7,
+      "zoom": 1.08
+    },
+    {
+      "file": "look-02.mp4",
+      "source_start": 1.1,
+      "source_end": 3.0,
+      "target_seconds": 1.9,
+      "zoom": 1.0
+    }
+  ],
+  "overlays": [
+    {
+      "text": "WHICH ONE WINS?",
+      "start": 0.0,
+      "end": 2.1,
+      "position": "top",
+      "font_size": 76
+    },
+    {
+      "text": "SAVE YOUR PICK",
+      "start": 2.1,
+      "end": 4.0,
+      "position": "bottom",
+      "font_size": 58
+    }
+  ]
+}
