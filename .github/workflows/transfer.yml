@@ -1,0 +1,99 @@
+name: fashion-asset-transfer
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Asset release tag (e.g. nfs-001-assets)"
+        required: true
+      manifest:
+        description: 'JSON map {"clip01.mp4":"signed_url", ...}'
+        required: true
+  push:
+    paths:
+      - 'requests/*.json'
+
+permissions:
+  contents: write
+
+jobs:
+  transfer:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Resolve request
+        id: req
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            printf '%s' '${{ inputs.tag }}' > tag.txt
+            printf '%s' '${{ inputs.manifest }}' > manifest.json
+          else
+            REQUEST_FILE=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'requests/*.json' | tail -n 1)
+            test -n "$REQUEST_FILE"
+            python3 - "$REQUEST_FILE" <<'PY'
+          import json, sys
+          request = json.load(open(sys.argv[1], encoding='utf-8'))
+          open('tag.txt','w',encoding='utf-8').write(request['tag'])
+          json.dump(request['manifest'], open('manifest.json','w',encoding='utf-8'))
+          PY
+          fi
+          echo "tag=$(cat tag.txt)" >> "$GITHUB_OUTPUT"
+
+      - name: Download signed assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          manifest = json.load(open('manifest.json', encoding='utf-8'))
+          if not manifest:
+              raise SystemExit('Asset manifest is empty')
+          for name, url in manifest.items():
+              safe = pathlib.Path(name).name
+              print(f'::add-mask::{url}')
+              subprocess.run(['curl','-fSL','--retry','4','--retry-delay','2','-o',f'assets/{safe}',url], check=True)
+          PY
+          test "$(find assets -maxdepth 1 -type f | wc -l)" -gt 0
+
+      - name: Validate media assets
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          for f in assets/*; do
+            ffprobe -v error "$f" >/dev/null
+          done
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.req.outputs.tag }}'
+          gh release delete "$TAG" -y --cleanup-tag --repo '${{ github.repository }}' 2>/dev/null || true
+          gh release create "$TAG" assets/* \
+            --repo '${{ github.repository }}' \
+            --title "Fashion assets $TAG" \
+            --notes "Transferred source assets for No Face Style reel assembly."
+
+      - name: Record transfer status
+        if: github.event_name == 'push'
+        run: |
+          set -euo pipefail
+          git pull --rebase
+          mkdir -p transfer-status
+          TAG='${{ steps.req.outputs.tag }}'
+          printf 'release=%s\nassets=%s\n' "$TAG" "$(find assets -maxdepth 1 -type f | wc -l)" > "transfer-status/$TAG.txt"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "transfer-status/$TAG.txt"
+          git commit -m "Record transfer success for $TAG" || exit 0
+          git push
