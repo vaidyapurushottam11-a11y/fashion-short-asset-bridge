@@ -1,0 +1,123 @@
+name: assemble-fashion-reel
+
+on:
+  workflow_dispatch:
+    inputs:
+      reel_id:
+        description: "Reel id (e.g. nfs-001)"
+        required: true
+      release_tag:
+        description: "Source asset release tag"
+        required: true
+      manifest:
+        description: "Manifest path in repo"
+        required: true
+  push:
+    paths:
+      - 'assembly-requests/*.json'
+
+permissions:
+  contents: write
+
+jobs:
+  assemble:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Resolve assembly request
+        id: req
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            REEL_ID='${{ inputs.reel_id }}'
+            RELEASE_TAG='${{ inputs.release_tag }}'
+            MANIFEST_PATH='${{ inputs.manifest }}'
+          else
+            REQUEST_FILE=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'assembly-requests/*.json' | tail -n 1)
+            test -n "$REQUEST_FILE"
+            REEL_ID=$(jq -r '.reel_id // empty' "$REQUEST_FILE")
+            RELEASE_TAG=$(jq -r '.release_tag // empty' "$REQUEST_FILE")
+            MANIFEST_PATH=$(jq -r '.manifest // empty' "$REQUEST_FILE")
+          fi
+          test -n "$REEL_ID"
+          test -n "$RELEASE_TAG"
+          test -n "$MANIFEST_PATH"
+          test -f "$MANIFEST_PATH"
+          echo "reel_id=$REEL_ID" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "manifest=$MANIFEST_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Install FFmpeg
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+          ffmpeg -version | head -n 1
+
+      - name: Download transferred assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p work/assets work/output work/qa
+          gh release download '${{ steps.req.outputs.release_tag }}' \
+            --repo '${{ github.repository }}' \
+            --dir work/assets
+          find work/assets -maxdepth 1 -type f -printf '%f\n' | sort
+
+      - name: Verify source files
+        run: |
+          set -euo pipefail
+          test "$(find work/assets -maxdepth 1 -type f | wc -l)" -gt 0
+          for f in work/assets/*; do
+            ffprobe -v error "$f" >/dev/null
+          done
+
+      - name: Assemble silent retention-first reel
+        run: |
+          set -euo pipefail
+          python3 scripts/fashion_assemble.py \
+            --manifest '${{ steps.req.outputs.manifest }}' \
+            --assets work/assets \
+            --out work/output \
+            --qa work/qa
+
+      - name: Verify silent output
+        shell: bash
+        run: |
+          set -euo pipefail
+          OUT=$(find work/output -maxdepth 1 -type f -name '*.mp4' | head -n 1)
+          test -n "$OUT"
+          AUDIO_COUNT=$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$OUT" | wc -l)
+          test "$AUDIO_COUNT" -eq 0
+          cat "work/qa/${{ steps.req.outputs.reel_id }}.txt"
+
+      - name: Publish final reel and QA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          FINAL_TAG='${{ steps.req.outputs.reel_id }}-final'
+          gh release delete "$FINAL_TAG" -y --cleanup-tag --repo '${{ github.repository }}' 2>/dev/null || true
+          gh release create "$FINAL_TAG" work/output/* work/qa/* \
+            --repo '${{ github.repository }}' \
+            --title "Final fashion reel ${{ steps.req.outputs.reel_id }}" \
+            --notes "Silent 1080x1920 Instagram-ready render plus technical QA. Add trending audio natively when posting."
+
+      - name: Record assembly status
+        run: |
+          set -euo pipefail
+          git pull --rebase
+          mkdir -p assembly-status
+          cp "work/qa/${{ steps.req.outputs.reel_id }}.txt" \
+             "assembly-status/${{ steps.req.outputs.reel_id }}.txt"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "assembly-status/${{ steps.req.outputs.reel_id }}.txt"
+          git commit -m "Record assembly result for ${{ steps.req.outputs.reel_id }}" || exit 0
+          git push
