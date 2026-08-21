@@ -21,11 +21,11 @@
     {"file":"look-01.mp4","source_start":1.00,"source_end":1.80,"target_seconds":0.80,"zoom":1.08}
   ],
   "overlays": [
-    {"text":"WHICH POLO FIT LOOKS\nMOST EXPENSIVE?","start":0.00,"end":1.80,"position":"top","font_size":56,"spacing":1.5},
-    {"text":"LOOK 1  •  CLEAN","start":1.80,"end":3.30,"position":"upper","font_size":52,"spacing":1.8},
-    {"text":"LOOK 2  •  SHARP","start":3.30,"end":4.80,"position":"upper","font_size":52,"spacing":1.8},
-    {"text":"LOOK 3  •  QUIET LUXURY","start":4.80,"end":6.30,"position":"upper","font_size":48,"spacing":1.5},
-    {"text":"LOOK 4  •  THE WILDCARD","start":6.30,"end":7.80,"position":"upper","font_size":48,"spacing":1.5},
-    {"text":"YOUR PICK?\n1  •  2  •  3  •  4","start":7.80,"end":8.60,"position":"top","font_size":54,"spacing":1.7}
+    {"text":"WHICH POLO FIT LOOKS\nMOST EXPENSIVE?","start":0.00,"end":1.80,"position":"top","font_size":43,"spacing":0.8,"typography":"noface"},
+    {"text":"LOOK 1  —  CLEAN","start":1.80,"end":3.30,"position":"upper","font_size":39,"spacing":0.7,"typography":"noface"},
+    {"text":"LOOK 2  —  SHARP","start":3.30,"end":4.80,"position":"upper","font_size":39,"spacing":0.7,"typography":"noface"},
+    {"text":"LOOK 3  —  QUIET LUXURY","start":4.80,"end":6.30,"position":"upper","font_size":37,"spacing":0.5,"typography":"noface"},
+    {"text":"LOOK 4  —  THE WILDCARD","start":6.30,"end":7.80,"position":"upper","font_size":37,"spacing":0.5,"typography":"noface"},
+    {"text":"YOUR PICK?  1  —  2  —  3  —  4","start":7.80,"end":8.60,"position":"top","font_size":38,"spacing":0.5,"typography":"noface"}
   ]
 }
