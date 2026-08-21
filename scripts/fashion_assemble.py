@@ -49,34 +49,30 @@ def overlay_qa(manifest, width, height):
     safe_x = int(manifest.get('text_safe_margin_x', 110))
     safe_top = int(manifest.get('text_safe_top', 180))
     safe_bottom = int(manifest.get('text_safe_bottom', 340))
-    safe_width = width - (safe_x * 2)
+    safe_width = width - safe_x * 2
     usable_height = height - safe_top - safe_bottom
     report = []
     all_fit = True
     all_safe = True
-
     for i, item in enumerate(overlays):
         text = str(item.get('text', ''))
         lines = text.split('\n')
-        size = int(item.get('font_size', 60))
-        spacing = float(item.get('spacing', 1.5))
-        # Conservative width approximation for bold sans uppercase.
-        estimated_width = max((len(line) * size * 0.62 + max(0, len(line)-1) * spacing) for line in lines) if lines else 0
-        estimated_height = len(lines) * size * 1.28
+        size = int(item.get('font_size', 42))
+        spacing = float(item.get('spacing', 0.6))
+        estimated_width = max((len(line) * size * 0.61 + max(0, len(line)-1) * spacing) for line in lines) if lines else 0
+        estimated_height = len(lines) * size * 1.18
         fits_width = estimated_width <= safe_width
         fits_height = estimated_height <= usable_height
         position = item.get('position', 'top')
         position_safe = position in ('top', 'upper', 'center')
-        fits = fits_width and fits_height
-        all_fit = all_fit and fits
+        all_fit = all_fit and fits_width and fits_height
         all_safe = all_safe and position_safe
         report.append({
             'index': i,
             'text': text,
             'position': position,
             'font_size': size,
-            'line_count': len(lines),
-            'estimated_width': round(estimated_width, 1),
+            'estimated_width': round(estimated_width,1),
             'safe_width': safe_width,
             'fits_safe_width': fits_width,
             'fits_safe_height': fits_height,
@@ -90,18 +86,18 @@ def build_ass(manifest, path, width, height):
     if not overlays:
         return None
     safe_x = int(manifest.get('text_safe_margin_x', 110))
-    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Hook,DejaVu Sans,58,&H00FFFFFF,&H000000FF,&H00121212,&H96000000,-1,0,0,0,100,100,1.8,0,3,2,0,8,{safe_x},{safe_x},210,1\nStyle: Upper,DejaVu Sans,54,&H00FFFFFF,&H000000FF,&H00121212,&H8C000000,-1,0,0,0,100,100,2.0,0,3,2,0,8,{safe_x},{safe_x},245,1\nStyle: Center,DejaVu Sans,58,&H00FFFFFF,&H000000FF,&H00121212,&H8C000000,-1,0,0,0,100,100,1.8,0,3,2,0,5,{safe_x},{safe_x},0,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
+    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Hook,DejaVu Sans Mono,43,&H00FFFFFF,&H000000FF,&H00151515,&H00000000,-1,-1,0,0,92,100,0.8,0,1,1.6,2.2,8,{safe_x},{safe_x},250,1\nStyle: Upper,DejaVu Sans Mono,39,&H00FFFFFF,&H000000FF,&H00151515,&H00000000,-1,-1,0,0,92,100,0.6,0,1,1.4,2.0,8,{safe_x},{safe_x},285,1\nStyle: Center,DejaVu Sans Mono,40,&H00FFFFFF,&H000000FF,&H00151515,&H00000000,-1,-1,0,0,92,100,0.7,0,1,1.5,2.0,5,{safe_x},{safe_x},0,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
     lines = [header]
     for item in overlays:
         position = item.get('position', 'upper')
         style = {'top':'Hook','upper':'Upper','center':'Center'}.get(position, 'Upper')
         start = ass_time(item['start'])
         end = ass_time(item['end'])
-        size = int(item.get('font_size', 58))
-        spacing = float(item.get('spacing', 1.8))
+        size = int(item.get('font_size', 42))
+        spacing = float(item.get('spacing', 0.6))
         text = ass_escape(item['text'])
-        # BorderStyle 3 gives a restrained semi-transparent editorial plate.
-        lines.append(f'Dialogue: 0,{start},{end},{style},,0,0,0,,{{\\fs{size}\\fsp{spacing}}}{text}\n')
+        # No Face Style typography: narrow italic white type, no box, subtle outline/shadow.
+        lines.append(f'Dialogue: 0,{start},{end},{style},,0,0,0,,{{\\fs{size}\\fsp{spacing}\\i1\\b1\\bord1.5\\shad2}}{text}\n')
     path.write_text(''.join(lines), encoding='utf-8')
     return path
 
@@ -152,7 +148,6 @@ def main():
     labels = []
     timeline_total = 0.0
     segment_report = []
-
     min_speed = float(manifest.get('min_speed', 0.5))
     max_speed = float(manifest.get('max_speed', 2.0))
 
@@ -160,8 +155,7 @@ def main():
         inputs += ['-i', str(path)]
         src_duration = duration(info)
         start = float(cfg.get('source_start', 0.0))
-        end = float(cfg.get('source_end', src_duration))
-        end = min(end, src_duration)
+        end = min(float(cfg.get('source_end', src_duration)), src_duration)
         if start < 0 or end <= start:
             raise SystemExit(f'Invalid trim for {path.name}: {start}..{end}')
         trimmed = end - start
@@ -171,7 +165,6 @@ def main():
         speed = trimmed / target
         if speed < min_speed or speed > max_speed:
             raise SystemExit(f'Speed {speed:.3f}x outside guardrail {min_speed}..{max_speed} for {path.name}')
-
         zoom = max(1.0, float(cfg.get('zoom', 1.0)))
         sw = int(round(width * zoom))
         sh = int(round(height * zoom))
@@ -183,34 +176,21 @@ def main():
             f'crop={width}:{height},fps={fps},setpts={target/trimmed:.9f}*PTS[{label}]'
         )
         timeline_total += target
-        segment_report.append({
-            'file': path.name,
-            'source_start': round(start,3),
-            'source_end': round(end,3),
-            'target_seconds': round(target,3),
-            'speed': round(speed,3),
-            'zoom': round(zoom,3),
-        })
+        segment_report.append({'file':path.name,'source_start':round(start,3),'source_end':round(end,3),'target_seconds':round(target,3),'speed':round(speed,3),'zoom':round(zoom,3)})
 
     base_label = 'base' if manifest.get('overlays') else 'vout'
     filters.append(''.join(labels) + f'concat=n={len(labels)}:v=1:a=0[{base_label}]')
-
     ass_path = qa_dir / f'{reel_id}.ass'
     if build_ass(manifest, ass_path, width, height):
         escaped = str(ass_path).replace('\\','/').replace(':','\\:').replace("'","\\'")
         filters.append(f"[base]subtitles='{escaped}'[vout]")
 
     output = out_dir / manifest.get('output', f'{reel_id}-final.mp4')
-    cmd = [
-        'ffmpeg','-y',*inputs,
-        '-filter_complex',';'.join(filters),
-        '-map','[vout]',
-        '-an',
-        '-c:v','libx264','-preset','medium','-crf','18',
-        '-pix_fmt','yuv420p','-r',str(fps),
+    run([
+        'ffmpeg','-y',*inputs,'-filter_complex',';'.join(filters),'-map','[vout]','-an',
+        '-c:v','libx264','-preset','medium','-crf','18','-pix_fmt','yuv420p','-r',str(fps),
         '-movflags','+faststart',str(output)
-    ]
-    run(cmd)
+    ])
 
     final = probe(output)
     v = video_stream(final)
@@ -236,6 +216,7 @@ def main():
         'segments': segment_report,
         'overlay_count': len(manifest.get('overlays',[])),
         'overlay_safe_zone_report': overlay_report,
+        'typography_profile': 'NO_FACE_STYLE_EXISTING_REEL_REFERENCE',
         'audio_policy': 'SILENT_NO_AUDIO_STREAM',
         'checks': checks,
         'technical_status': 'PASS' if passed else 'FAIL',
@@ -243,15 +224,10 @@ def main():
     }
     (qa_dir / f'{reel_id}.json').write_text(json.dumps(qa, indent=2), encoding='utf-8')
     (qa_dir / f'{reel_id}.txt').write_text('\n'.join([
-        f'reel={reel_id}',
-        f'duration={final_duration:.3f}',
-        f'resolution={v.get("width")}x{v.get("height")}',
-        f'video_codec={v.get("codec_name")}',
-        'audio_stream=NONE' if a is None else 'audio_stream=PRESENT',
-        f'overlay_fit={"PASS" if overlay_fit else "FAIL"}',
-        f'overlay_safe_zone={"PASS" if overlay_safe else "FAIL"}',
-        f'technical_status={"PASS" if passed else "FAIL"}',
-        'editorial_status=PENDING_VISUAL_REVIEW',
+        f'reel={reel_id}',f'duration={final_duration:.3f}',f'resolution={v.get("width")}x{v.get("height")}',
+        f'video_codec={v.get("codec_name")}','audio_stream=NONE' if a is None else 'audio_stream=PRESENT',
+        f'overlay_fit={"PASS" if overlay_fit else "FAIL"}',f'overlay_safe_zone={"PASS" if overlay_safe else "FAIL"}',
+        'typography=NO_FACE_STYLE_REFERENCE',f'technical_status={"PASS" if passed else "FAIL"}','editorial_status=PENDING_VISUAL_REVIEW'
     ]) + '\n', encoding='utf-8')
     if not passed:
         raise SystemExit('Technical QA failed')
