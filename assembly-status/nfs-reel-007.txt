@@ -5,5 +5,6 @@ video_codec=h264
 audio_stream=NONE
 overlay_fit=PASS
 overlay_safe_zone=PASS
+typography=NO_FACE_STYLE_REFERENCE
 technical_status=PASS
 editorial_status=PENDING_VISUAL_REVIEW
