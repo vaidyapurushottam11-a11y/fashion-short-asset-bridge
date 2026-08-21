@@ -1,0 +1,46 @@
+name: resolve-magnific-creation-id
+
+on:
+  push:
+    paths:
+      - 'creation-requests/*.json'
+
+permissions:
+  contents: write
+
+jobs:
+  resolve:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Resolve request file
+        id: req
+        shell: bash
+        run: |
+          set -euo pipefail
+          REQUEST_FILE=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'creation-requests/*.json' | tail -n 1)
+          test -n "$REQUEST_FILE"
+          echo "request=$REQUEST_FILE" >> "$GITHUB_OUTPUT"
+      - name: Probe Magnific creation pages
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - '${{ steps.req.outputs.request }}' <<'PY'
+          import json, re, subprocess, sys, html
+          req=json.load(open(sys.argv[1]))
+          ok=0
+          for name, cid in req['creations'].items():
+              page=f'https://www.magnific.com/app/creation/{cid}'
+              cp=subprocess.run(['curl','-fsSL','-A','Mozilla/5.0',page],capture_output=True,text=True)
+              print(f'{name}: http_ok={cp.returncode==0} bytes={len(cp.stdout)}')
+              body=html.unescape(cp.stdout).replace('\\u0026','&').replace('\\/','/')
+              urls=re.findall(r'https://[^"\'<> ]+?\.mp4(?:\?[^"\'<> ]+)?',body)
+              urls=[u for u in urls if 'cdnpk.net' in u or 'magnific' in u]
+              print(f'{name}: media_candidates={len(urls)}')
+              if urls:
+                  ok+=1
+          if ok == 0:
+              raise SystemExit('No directly resolvable media URLs found in public creation pages')
+          PY
