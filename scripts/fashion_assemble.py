@@ -44,19 +44,64 @@ def ass_escape(text):
     return str(text).replace('\\','\\\\').replace('{','\\{').replace('}','\\}').replace('\n','\\N')
 
 
+def overlay_qa(manifest, width, height):
+    overlays = manifest.get('overlays', [])
+    safe_x = int(manifest.get('text_safe_margin_x', 110))
+    safe_top = int(manifest.get('text_safe_top', 180))
+    safe_bottom = int(manifest.get('text_safe_bottom', 340))
+    safe_width = width - (safe_x * 2)
+    usable_height = height - safe_top - safe_bottom
+    report = []
+    all_fit = True
+    all_safe = True
+
+    for i, item in enumerate(overlays):
+        text = str(item.get('text', ''))
+        lines = text.split('\n')
+        size = int(item.get('font_size', 60))
+        spacing = float(item.get('spacing', 1.5))
+        # Conservative width approximation for bold sans uppercase.
+        estimated_width = max((len(line) * size * 0.62 + max(0, len(line)-1) * spacing) for line in lines) if lines else 0
+        estimated_height = len(lines) * size * 1.28
+        fits_width = estimated_width <= safe_width
+        fits_height = estimated_height <= usable_height
+        position = item.get('position', 'top')
+        position_safe = position in ('top', 'upper', 'center')
+        fits = fits_width and fits_height
+        all_fit = all_fit and fits
+        all_safe = all_safe and position_safe
+        report.append({
+            'index': i,
+            'text': text,
+            'position': position,
+            'font_size': size,
+            'line_count': len(lines),
+            'estimated_width': round(estimated_width, 1),
+            'safe_width': safe_width,
+            'fits_safe_width': fits_width,
+            'fits_safe_height': fits_height,
+            'position_safe_for_reels_ui': position_safe,
+        })
+    return all_fit, all_safe, report
+
+
 def build_ass(manifest, path, width, height):
     overlays = manifest.get('overlays', [])
     if not overlays:
         return None
-    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans,72,&H00FFFFFF,&H000000FF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,4,0,8,90,90,250,1\nStyle: Center,DejaVu Sans,72,&H00FFFFFF,&H000000FF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,4,0,5,90,90,0,1\nStyle: Bottom,DejaVu Sans,64,&H00FFFFFF,&H000000FF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,4,0,2,90,90,300,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
+    safe_x = int(manifest.get('text_safe_margin_x', 110))
+    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Hook,DejaVu Sans,58,&H00FFFFFF,&H000000FF,&H00121212,&H96000000,-1,0,0,0,100,100,1.8,0,3,2,0,8,{safe_x},{safe_x},210,1\nStyle: Upper,DejaVu Sans,54,&H00FFFFFF,&H000000FF,&H00121212,&H8C000000,-1,0,0,0,100,100,2.0,0,3,2,0,8,{safe_x},{safe_x},245,1\nStyle: Center,DejaVu Sans,58,&H00FFFFFF,&H000000FF,&H00121212,&H8C000000,-1,0,0,0,100,100,1.8,0,3,2,0,5,{safe_x},{safe_x},0,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
     lines = [header]
     for item in overlays:
-        style = {'top':'Top','center':'Center','bottom':'Bottom'}.get(item.get('position','top'),'Top')
+        position = item.get('position', 'upper')
+        style = {'top':'Hook','upper':'Upper','center':'Center'}.get(position, 'Upper')
         start = ass_time(item['start'])
         end = ass_time(item['end'])
-        size = int(item.get('font_size', 72))
+        size = int(item.get('font_size', 58))
+        spacing = float(item.get('spacing', 1.8))
         text = ass_escape(item['text'])
-        lines.append(f'Dialogue: 0,{start},{end},{style},,0,0,0,,{{\\fs{size}}}{text}\n')
+        # BorderStyle 3 gives a restrained semi-transparent editorial plate.
+        lines.append(f'Dialogue: 0,{start},{end},{style},,0,0,0,,{{\\fs{size}\\fsp{spacing}}}{text}\n')
     path.write_text(''.join(lines), encoding='utf-8')
     return path
 
@@ -83,6 +128,14 @@ def main():
     clips_cfg = manifest['clips']
     if not clips_cfg:
         raise SystemExit('Manifest contains no clips')
+
+    overlay_fit, overlay_safe, overlay_report = overlay_qa(manifest, width, height)
+    if not overlay_fit:
+        bad = [x['text'] for x in overlay_report if not x['fits_safe_width'] or not x['fits_safe_height']]
+        raise SystemExit('Overlay text exceeds safe area: ' + ' | '.join(bad))
+    if not overlay_safe:
+        bad = [x['text'] for x in overlay_report if not x['position_safe_for_reels_ui']]
+        raise SystemExit('Overlay uses unsafe lower Reels UI zone: ' + ' | '.join(bad))
 
     paths = [assets / c['file'] for c in clips_cfg]
     missing = [str(p) for p in paths if not p.exists()]
@@ -170,6 +223,8 @@ def main():
         'silent_no_audio_stream': a is None,
         'duration_matches_manifest': abs(final_duration - timeline_total) <= 0.25,
         'all_source_assets_valid': True,
+        'overlay_text_fits_safe_width': overlay_fit,
+        'overlay_positions_avoid_lower_reels_ui': overlay_safe,
     }
     passed = all(checks.values())
     qa = {
@@ -180,10 +235,11 @@ def main():
         'clip_count': len(paths),
         'segments': segment_report,
         'overlay_count': len(manifest.get('overlays',[])),
+        'overlay_safe_zone_report': overlay_report,
         'audio_policy': 'SILENT_NO_AUDIO_STREAM',
         'checks': checks,
         'technical_status': 'PASS' if passed else 'FAIL',
-        'editorial_status': 'PENDING_REVIEW',
+        'editorial_status': 'PENDING_VISUAL_REVIEW',
     }
     (qa_dir / f'{reel_id}.json').write_text(json.dumps(qa, indent=2), encoding='utf-8')
     (qa_dir / f'{reel_id}.txt').write_text('\n'.join([
@@ -192,8 +248,10 @@ def main():
         f'resolution={v.get("width")}x{v.get("height")}',
         f'video_codec={v.get("codec_name")}',
         'audio_stream=NONE' if a is None else 'audio_stream=PRESENT',
+        f'overlay_fit={"PASS" if overlay_fit else "FAIL"}',
+        f'overlay_safe_zone={"PASS" if overlay_safe else "FAIL"}',
         f'technical_status={"PASS" if passed else "FAIL"}',
-        'editorial_status=PENDING_REVIEW',
+        'editorial_status=PENDING_VISUAL_REVIEW',
     ]) + '\n', encoding='utf-8')
     if not passed:
         raise SystemExit('Technical QA failed')
