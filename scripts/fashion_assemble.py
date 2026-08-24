@@ -97,7 +97,7 @@ def main():
     inputs = []
     filters = []
     labels = []
-    timeline_total = 0.0
+    segment_durations = []
     segment_report = []
 
     min_speed = float(manifest.get('min_speed', 0.5))
@@ -123,13 +123,13 @@ def main():
         sw = int(round(width * zoom))
         sh = int(round(height * zoom))
         label = f'v{i}'
-        labels.append(f'[{label}]')
+        labels.append(label)
         filters.append(
             f'[{i}:v]trim=start={start:.6f}:end={end:.6f},setpts=PTS-STARTPTS,'
             f'scale={sw}:{sh}:force_original_aspect_ratio=increase,'
             f'crop={width}:{height},fps={fps},setpts={target/trimmed:.9f}*PTS[{label}]'
         )
-        timeline_total += target
+        segment_durations.append(target)
         segment_report.append({
             'file': path.name,
             'source_start': round(start,3),
@@ -139,8 +139,31 @@ def main():
             'zoom': round(zoom,3),
         })
 
+    transition_seconds = max(0.0, float(manifest.get('transition_seconds', 0.0)))
+    transition_style = str(manifest.get('transition_style', 'fade'))
+
+    if transition_seconds > 0 and len(labels) > 1:
+        current = labels[0]
+        elapsed = segment_durations[0]
+        for i in range(1, len(labels)):
+            t = min(transition_seconds, segment_durations[i] * 0.45, segment_durations[i-1] * 0.45)
+            offset = elapsed - t
+            out_label = f'xf{i}'
+            filters.append(
+                f'[{current}][{labels[i]}]xfade=transition={transition_style}:duration={t:.6f}:offset={offset:.6f}[{out_label}]'
+            )
+            elapsed += segment_durations[i] - t
+            current = out_label
+        timeline_total = elapsed
+        composed_label = current
+    else:
+        composed_label = 'joined'
+        filters.append(''.join(f'[{x}]' for x in labels) + f'concat=n={len(labels)}:v=1:a=0[{composed_label}]')
+        timeline_total = sum(segment_durations)
+
     base_label = 'base' if manifest.get('overlays') else 'vout'
-    filters.append(''.join(labels) + f'concat=n={len(labels)}:v=1:a=0[{base_label}]')
+    if composed_label != base_label:
+        filters.append(f'[{composed_label}]null[{base_label}]')
 
     ass_path = qa_dir / f'{reel_id}.ass'
     if build_ass(manifest, ass_path, width, height):
@@ -179,6 +202,8 @@ def main():
         'planned_seconds': round(timeline_total,3),
         'clip_count': len(paths),
         'segments': segment_report,
+        'transition_style': transition_style if transition_seconds > 0 else 'hard_cut',
+        'transition_seconds': transition_seconds,
         'overlay_count': len(manifest.get('overlays',[])),
         'audio_policy': 'SILENT_NO_AUDIO_STREAM',
         'checks': checks,
