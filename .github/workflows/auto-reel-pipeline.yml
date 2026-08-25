@@ -1,0 +1,202 @@
+name: no-face-style-auto-pipeline
+
+on:
+  push:
+    paths:
+      - 'manifests/*.json'
+  workflow_dispatch:
+    inputs:
+      manifest:
+        description: 'Manifest path in repo'
+        required: true
+        default: 'manifests/nfs-reel-001.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: nfs-auto-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Resolve reel manifest
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            MANIFEST_PATH='${{ inputs.manifest }}'
+          else
+            MANIFEST_PATH=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'manifests/*.json' | tail -n 1)
+          fi
+          test -n "$MANIFEST_PATH"
+          test -f "$MANIFEST_PATH"
+          REEL_ID=$(jq -r '.reel_id // empty' "$MANIFEST_PATH")
+          test -n "$REEL_ID"
+          RELEASE_TAG="${REEL_ID}-assets"
+          HANDOFF_PATH=$(jq -r '.secure_handoff // empty' "$MANIFEST_PATH")
+          echo "manifest=$MANIFEST_PATH" >> "$GITHUB_OUTPUT"
+          echo "reel_id=$REEL_ID" >> "$GITHUB_OUTPUT"
+          echo "release_tag=$RELEASE_TAG" >> "$GITHUB_OUTPUT"
+          echo "handoff=$HANDOFF_PATH" >> "$GITHUB_OUTPUT"
+
+      - name: Install media and crypto dependencies
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+          python3 -m pip install --disable-pip-version-check cryptography
+
+      - name: Check whether source assets already exist
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          if gh release view '${{ steps.meta.outputs.release_tag }}' --repo '${{ github.repository }}' >/dev/null 2>&1; then
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'exists=false' >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Decrypt secure asset handoff
+        if: steps.release.outputs.exists != 'true'
+        env:
+          NFS_TRANSFER_PRIVATE_KEY: ${{ secrets.NFS_TRANSFER_PRIVATE_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$NFS_TRANSFER_PRIVATE_KEY" || { echo 'Missing repository secret NFS_TRANSFER_PRIVATE_KEY'; exit 1; }
+          HANDOFF='${{ steps.meta.outputs.handoff }}'
+          test -n "$HANDOFF" || { echo 'Manifest requires secure_handoff for first transfer'; exit 1; }
+          test -f "$HANDOFF"
+          umask 077
+          printf '%s\n' "$NFS_TRANSFER_PRIVATE_KEY" > private-key.pem
+          python3 scripts/nfs_secure_handoff.py decrypt \
+            --private-key private-key.pem \
+            --input "$HANDOFF" \
+            --output asset-manifest.json
+          rm -f private-key.pem
+          python3 - <<'PY'
+          import json, pathlib
+          data = json.load(open('asset-manifest.json', encoding='utf-8'))
+          if not isinstance(data, dict) or not data:
+              raise SystemExit('Decrypted asset manifest must be a non-empty object')
+          for name, url in data.items():
+              if pathlib.Path(name).name != name:
+                  raise SystemExit(f'Unsafe asset filename: {name}')
+              if not isinstance(url, str) or not url.startswith('https://'):
+                  raise SystemExit(f'Invalid URL for {name}')
+          PY
+
+      - name: Transfer and validate source assets
+        if: steps.release.outputs.exists != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p transfer-assets
+          python3 - <<'PY'
+          import json, pathlib, subprocess
+          manifest = json.load(open('asset-manifest.json', encoding='utf-8'))
+          for name, url in manifest.items():
+              print(f'::add-mask::{url}')
+              subprocess.run([
+                  'curl','-fSL','--retry','4','--retry-delay','2',
+                  '-o',str(pathlib.Path('transfer-assets') / name),url
+              ], check=True)
+          PY
+          rm -f asset-manifest.json
+          test "$(find transfer-assets -maxdepth 1 -type f | wc -l)" -gt 0
+          for f in transfer-assets/*; do
+            ffprobe -v error "$f" >/dev/null
+          done
+
+      - name: Publish source asset release
+        if: steps.release.outputs.exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.meta.outputs.release_tag }}'
+          gh release create "$TAG" transfer-assets/* \
+            --repo '${{ github.repository }}' \
+            --title "Fashion assets $TAG" \
+            --notes "Securely transferred source assets for No Face Style reel assembly."
+
+      - name: Download source asset release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p work/assets work/output work/qa
+          gh release download '${{ steps.meta.outputs.release_tag }}' \
+            --repo '${{ github.repository }}' \
+            --dir work/assets
+          test "$(find work/assets -maxdepth 1 -type f | wc -l)" -gt 0
+          for f in work/assets/*; do
+            ffprobe -v error "$f" >/dev/null
+          done
+
+      - name: Assemble silent retention-first reel
+        run: |
+          set -euo pipefail
+          python3 scripts/fashion_assemble.py \
+            --manifest '${{ steps.meta.outputs.manifest }}' \
+            --assets work/assets \
+            --out work/output \
+            --qa work/qa
+
+      - name: Enforce technical QA gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          QA="work/qa/${{ steps.meta.outputs.reel_id }}.json"
+          test -f "$QA"
+          jq -e '.technical_status == "PASS"' "$QA" >/dev/null
+          OUT=$(find work/output -maxdepth 1 -type f -name '*.mp4' | head -n 1)
+          test -n "$OUT"
+          AUDIO_COUNT=$(ffprobe -v error -select_streams a -show_entries stream=index -of csv=p=0 "$OUT" | wc -l)
+          test "$AUDIO_COUNT" -eq 0
+          cat "work/qa/${{ steps.meta.outputs.reel_id }}.txt"
+
+      - name: Publish final reel and QA
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          FINAL_TAG='${{ steps.meta.outputs.reel_id }}-final'
+          gh release delete "$FINAL_TAG" -y --cleanup-tag --repo '${{ github.repository }}' 2>/dev/null || true
+          gh release create "$FINAL_TAG" work/output/* work/qa/* \
+            --repo '${{ github.repository }}' \
+            --title "Final fashion reel ${{ steps.meta.outputs.reel_id }}" \
+            --notes "Automated silent 1080x1920 render plus technical QA. Human Gate E editorial approval is still required before publishing."
+
+      - name: Record pipeline status
+        shell: bash
+        run: |
+          set -euo pipefail
+          git pull --rebase
+          mkdir -p transfer-status assembly-status
+          printf 'release=%s\nmode=%s\n' \
+            '${{ steps.meta.outputs.release_tag }}' \
+            '${{ steps.release.outputs.exists == 'true' && 'REUSED' || 'TRANSFERRED' }}' \
+            > "transfer-status/${{ steps.meta.outputs.release_tag }}.txt"
+          cp "work/qa/${{ steps.meta.outputs.reel_id }}.txt" \
+             "assembly-status/${{ steps.meta.outputs.reel_id }}.txt"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add "transfer-status/${{ steps.meta.outputs.release_tag }}.txt" \
+                  "assembly-status/${{ steps.meta.outputs.reel_id }}.txt"
+          git commit -m "Record automated pipeline result for ${{ steps.meta.outputs.reel_id }}" || exit 0
+          git push
