@@ -14,7 +14,6 @@ on:
         required: true
   push:
     paths:
-      - 'manifests/*.json'
       - 'assembly-requests/*.json'
 
 permissions:
@@ -39,18 +38,11 @@ jobs:
             RELEASE_TAG='${{ inputs.release_tag }}'
             MANIFEST_PATH='${{ inputs.manifest }}'
           else
-            MANIFEST_FILE=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'manifests/*.json' | tail -n 1)
-            if [ -n "$MANIFEST_FILE" ]; then
-              MANIFEST_PATH="$MANIFEST_FILE"
-              REEL_ID=$(jq -r '.reel_id // empty' "$MANIFEST_PATH")
-              RELEASE_TAG="${REEL_ID}-assets"
-            else
-              REQUEST_FILE=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'assembly-requests/*.json' | tail -n 1)
-              test -n "$REQUEST_FILE"
-              REEL_ID=$(jq -r '.reel_id // empty' "$REQUEST_FILE")
-              RELEASE_TAG=$(jq -r '.release_tag // empty' "$REQUEST_FILE")
-              MANIFEST_PATH=$(jq -r '.manifest // empty' "$REQUEST_FILE")
-            fi
+            REQUEST_FILE=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'assembly-requests/*.json' | tail -n 1)
+            test -n "$REQUEST_FILE"
+            REEL_ID=$(jq -r '.reel_id // empty' "$REQUEST_FILE")
+            RELEASE_TAG=$(jq -r '.release_tag // empty' "$REQUEST_FILE")
+            MANIFEST_PATH=$(jq -r '.manifest // empty' "$REQUEST_FILE")
           fi
           test -n "$REEL_ID"
           test -n "$RELEASE_TAG"
