@@ -4,6 +4,9 @@ on:
   push:
     paths:
       - 'manifests/*.json'
+  pull_request:
+    paths:
+      - 'manifests/*.json'
   workflow_dispatch:
     inputs:
       manifest:
@@ -35,7 +38,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             MANIFEST_PATH='${{ inputs.manifest }}'
           else
-            MANIFEST_PATH=$(git diff-tree --no-commit-id --name-only --diff-filter=AM -r "${{ github.sha }}" -- 'manifests/*.json' | tail -n 1)
+            MANIFEST_PATH=$(git diff --name-only HEAD^ HEAD -- 'manifests/*.json' | tail -n 1)
           fi
           test -n "$MANIFEST_PATH"
           test -f "$MANIFEST_PATH"
@@ -183,6 +186,7 @@ jobs:
             --notes "Automated silent 1080x1920 render plus technical QA. Human Gate E editorial approval is still required before publishing."
 
       - name: Record pipeline status
+        if: github.event_name != 'pull_request'
         shell: bash
         run: |
           set -euo pipefail
