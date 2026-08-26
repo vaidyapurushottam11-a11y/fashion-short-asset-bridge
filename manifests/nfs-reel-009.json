@@ -1,0 +1,31 @@
+{
+  "reel_id": "nfs-reel-009",
+  "pipeline_version": 2,
+  "output": "nfs-reel-009-final.mp4",
+  "secure_handoff": "automation/nfs-reel-009-assets.enc.json",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "min_speed": 0.5,
+  "max_speed": 2.0,
+  "text_safe_margin_x": 110,
+  "text_safe_top": 180,
+  "text_safe_bottom": 340,
+  "transition_style": "cut",
+  "transition_seconds": 0.0,
+  "clips": [
+    {"file":"look-01.mp4","source_start":1.00,"source_end":1.22,"target_seconds":0.22,"zoom":1.08},
+    {"file":"look-02.mp4","source_start":1.00,"source_end":1.22,"target_seconds":0.22,"zoom":1.00},
+    {"file":"look-03.mp4","source_start":1.00,"source_end":1.22,"target_seconds":0.22,"zoom":1.06},
+    {"file":"look-04.mp4","source_start":1.00,"source_end":1.22,"target_seconds":0.22,"zoom":1.02},
+    {"file":"look-01.mp4","source_start":1.15,"source_end":2.95,"target_seconds":1.80,"zoom":1.00},
+    {"file":"look-02.mp4","source_start":1.10,"source_end":2.80,"target_seconds":1.70,"zoom":1.05},
+    {"file":"look-03.mp4","source_start":1.15,"source_end":2.85,"target_seconds":1.70,"zoom":1.00},
+    {"file":"look-04.mp4","source_start":1.10,"source_end":2.80,"target_seconds":1.70,"zoom":1.04},
+    {"file":"look-01.mp4","source_start":2.10,"source_end":3.10,"target_seconds":1.00,"zoom":1.03}
+  ],
+  "overlays": [
+    {"text":"WHICH FIT LOOKS\nMOST EXPENSIVE?","start":0.00,"end":1.32,"position":"top","font_size":44},
+    {"text":"YOUR PICK?","start":7.78,"end":8.78,"position":"top","font_size":50}
+  ]
+}
