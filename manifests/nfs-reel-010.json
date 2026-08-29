@@ -1,7 +1,7 @@
 {
   "reel_id": "nfs-reel-010",
   "pipeline_version": 2,
-  "revision": 1,
+  "revision": 2,
   "output": "nfs-reel-010-final.mp4",
   "secure_handoff": "automation/nfs-reel-010-assets.enc.json",
   "width": 1080,
@@ -24,16 +24,10 @@
     {"file":"look-02.mp4","source_start":1.35,"source_end":2.50,"target_seconds":1.15,"zoom":1.04},
     {"file":"look-03.mp4","source_start":1.35,"source_end":2.50,"target_seconds":1.15,"zoom":1.01},
     {"file":"look-04.mp4","source_start":1.35,"source_end":2.50,"target_seconds":1.15,"zoom":1.05},
-    {"file":"look-05.mp4","source_start":1.35,"source_end":2.50,"target_seconds":1.15,"zoom":1.02},
-    {"file":"look-01.mp4","source_start":2.40,"source_end":3.10,"target_seconds":0.70,"zoom":1.00}
+    {"file":"look-05.mp4","source_start":1.35,"source_end":2.50,"target_seconds":1.15,"zoom":1.02}
   ],
   "overlays": [
-    {"text":"YOU CAN KEEP\nONLY ONE","start":0.00,"end":1.30,"position":"top","font_size":46},
-    {"text":"01","start":0.90,"end":2.05,"position":"top","font_size":36},
-    {"text":"02","start":2.05,"end":3.20,"position":"top","font_size":36},
-    {"text":"03","start":3.20,"end":4.35,"position":"top","font_size":36},
-    {"text":"04","start":4.35,"end":5.50,"position":"top","font_size":36},
-    {"text":"05","start":5.50,"end":6.65,"position":"top","font_size":36},
-    {"text":"1, 2, 3, 4 OR 5?","start":6.35,"end":7.35,"position":"top","font_size":42}
+    {"text":"You can keep\nonly one.","start":0.00,"end":1.30,"position":"top","font_size":46},
+    {"text":"Which one's your move?","start":5.45,"end":6.65,"position":"top","font_size":42}
   ]
 }
