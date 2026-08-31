@@ -48,9 +48,10 @@ def build_ass(manifest, path, width, height):
     overlays = manifest.get('overlays', [])
     if not overlays:
         return None
-    # Locked No Face Style Reel typography: condensed/narrow italic white,
-    # no box, restrained dark outline + subtle shadow. Cover typography is separate.
-    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans Condensed,72,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,-1,0,0,88,100,0,0,1,2,1,8,90,90,250,1\nStyle: Center,DejaVu Sans Condensed,72,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,-1,0,0,88,100,0,0,1,2,1,5,90,90,0,1\nStyle: Bottom,DejaVu Sans Condensed,64,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,-1,0,0,88,100,0,0,1,2,1,2,90,90,300,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
+    # Locked No Face Style Reel typography: condensed/narrow italic white.
+    # Top overlays use a restrained translucent charcoal focus plate so the
+    # theme remains readable over both light and dark fashion backgrounds.
+    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans Condensed,72,&H00FFFFFF,&H000000FF,&H70000000,&H70000000,-1,-1,0,0,88,100,0,0,3,16,0,8,90,90,250,1\nStyle: Center,DejaVu Sans Condensed,72,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,-1,0,0,88,100,0,0,1,3,1,5,90,90,0,1\nStyle: Bottom,DejaVu Sans Condensed,64,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,-1,-1,0,0,88,100,0,0,1,3,1,2,90,90,300,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
     lines = [header]
     for item in overlays:
         style = {'top':'Top','center':'Center','bottom':'Bottom'}.get(item.get('position','top'),'Top')
