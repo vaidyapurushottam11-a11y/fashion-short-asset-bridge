@@ -1,7 +1,7 @@
 {
   "reel_id": "nfs-reel-011",
   "pipeline_version": 2,
-  "revision": 2,
+  "revision": 3,
   "output": "nfs-reel-011-final.mp4",
   "secure_handoff": "automation/nfs-reel-011-assets.enc.json",
   "width": 1080,
