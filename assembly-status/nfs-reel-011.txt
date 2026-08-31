@@ -1,0 +1,7 @@
+reel=nfs-reel-011
+duration=5.267
+resolution=1080x1920
+video_codec=h264
+audio_stream=NONE
+technical_status=PASS
+editorial_status=PENDING_REVIEW
