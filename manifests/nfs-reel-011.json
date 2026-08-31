@@ -1,7 +1,7 @@
 {
   "reel_id": "nfs-reel-011",
   "pipeline_version": 2,
-  "revision": 1,
+  "revision": 2,
   "output": "nfs-reel-011-final.mp4",
   "secure_handoff": "automation/nfs-reel-011-assets.enc.json",
   "width": 1080,
@@ -25,7 +25,7 @@
     {"file":"look-04.mp4","source_start":1.25,"source_end":2.40,"target_seconds":1.15,"zoom":1.05}
   ],
   "overlays": [
-    {"text":"WHICH FIT LOOKS\nMOST EXPENSIVE?","start":0.00,"end":1.10,"position":"top","font_size":44},
-    {"text":"YOUR PICK?","start":4.05,"end":5.24,"position":"top","font_size":50}
+    {"text":"TEXTURED KNIT\nSMART CASUAL","start":0.00,"end":1.30,"position":"top","font_size":56},
+    {"text":"PICK YOUR LOOK","start":4.05,"end":5.24,"position":"top","font_size":48}
   ]
 }
