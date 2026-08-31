@@ -1,2 +1,2 @@
 release=nfs-reel-011-assets
-mode=TRANSFERRED
+mode=REUSED
