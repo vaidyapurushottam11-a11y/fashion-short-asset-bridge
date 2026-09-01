@@ -1,0 +1,36 @@
+{
+  "reel_id": "nfs-test-02",
+  "asset_release_tag": "nfs-reel-012-assets",
+  "pipeline_version": 2,
+  "revision": 1,
+  "output": "nfs-test-02-final.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "min_speed": 0.5,
+  "max_speed": 2.0,
+  "text_safe_margin_x": 110,
+  "text_safe_top": 180,
+  "text_safe_bottom": 340,
+  "transition_style": "cut",
+  "transition_seconds": 0.0,
+  "clips": [
+    {"file":"look-04.mp4","source_start":1.20,"source_end":1.38,"target_seconds":0.18,"zoom":1.10},
+    {"file":"look-01.mp4","source_start":1.22,"source_end":1.40,"target_seconds":0.18,"zoom":1.03},
+    {"file":"look-03.mp4","source_start":1.24,"source_end":1.42,"target_seconds":0.18,"zoom":1.08},
+    {"file":"look-02.mp4","source_start":1.26,"source_end":1.44,"target_seconds":0.18,"zoom":1.02},
+    {"file":"look-04.mp4","source_start":1.60,"source_end":2.90,"target_seconds":1.30,"zoom":1.00},
+    {"file":"look-03.mp4","source_start":1.60,"source_end":2.90,"target_seconds":1.30,"zoom":1.03},
+    {"file":"look-02.mp4","source_start":1.60,"source_end":2.90,"target_seconds":1.30,"zoom":1.00},
+    {"file":"look-01.mp4","source_start":1.60,"source_end":3.15,"target_seconds":1.55,"zoom":1.05},
+    {"file":"look-01.mp4","source_start":3.16,"source_end":3.76,"target_seconds":0.60,"zoom":1.10}
+  ],
+  "overlays": [
+    {"text":"RANKING 4 POLO FITS\nFROM GOOD TO BEST","start":0.00,"end":0.95,"position":"top","font_size":58},
+    {"text":"#4","start":0.72,"end":2.02,"position":"top","font_size":72},
+    {"text":"#3","start":2.02,"end":3.32,"position":"top","font_size":72},
+    {"text":"#2","start":3.32,"end":4.62,"position":"top","font_size":72},
+    {"text":"#1","start":4.62,"end":6.17,"position":"top","font_size":78},
+    {"text":"AGREE OR NO?","start":6.17,"end":6.77,"position":"top","font_size":56}
+  ]
+}
