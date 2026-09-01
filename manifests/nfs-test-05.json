@@ -1,0 +1,36 @@
+{
+  "reel_id": "nfs-test-05",
+  "asset_release_tag": "nfs-reel-012-assets",
+  "pipeline_version": 2,
+  "revision": 1,
+  "output": "nfs-test-05-final.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "min_speed": 0.5,
+  "max_speed": 2.0,
+  "text_safe_margin_x": 110,
+  "text_safe_top": 180,
+  "text_safe_bottom": 340,
+  "transition_style": "cut",
+  "transition_seconds": 0.0,
+  "clips": [
+    {"file":"look-04.mp4","source_start":1.18,"source_end":1.36,"target_seconds":0.18,"zoom":1.10},
+    {"file":"look-03.mp4","source_start":1.18,"source_end":1.36,"target_seconds":0.18,"zoom":1.04},
+    {"file":"look-02.mp4","source_start":1.18,"source_end":1.36,"target_seconds":0.18,"zoom":1.08},
+    {"file":"look-01.mp4","source_start":1.18,"source_end":1.36,"target_seconds":0.18,"zoom":1.02},
+    {"file":"look-04.mp4","source_start":1.55,"source_end":2.75,"target_seconds":1.20,"zoom":1.00},
+    {"file":"look-03.mp4","source_start":1.55,"source_end":2.75,"target_seconds":1.20,"zoom":1.05},
+    {"file":"look-02.mp4","source_start":1.55,"source_end":2.75,"target_seconds":1.20,"zoom":1.00},
+    {"file":"look-01.mp4","source_start":1.55,"source_end":2.75,"target_seconds":1.20,"zoom":1.05},
+    {"file":"look-04.mp4","source_start":2.80,"source_end":3.50,"target_seconds":0.70,"zoom":1.10}
+  ],
+  "overlays": [
+    {"text":"THE POLO FORMULA\nTHAT ALWAYS LOOKS CLEAN","start":0.00,"end":1.25,"position":"top","font_size":56},
+    {"text":"TEXTURE","start":0.72,"end":1.92,"position":"top","font_size":54},
+    {"text":"CLEAN TROUSERS","start":1.92,"end":3.12,"position":"top","font_size":50},
+    {"text":"SIMPLE SHOES","start":3.12,"end":4.32,"position":"top","font_size":50},
+    {"text":"ONE STRONG COLOR PAIR","start":4.32,"end":5.52,"position":"top","font_size":48},
+    {"text":"SAVE THIS FORMULA","start":5.52,"end":6.22,"position":"top","font_size":54}
+  ]
+}
