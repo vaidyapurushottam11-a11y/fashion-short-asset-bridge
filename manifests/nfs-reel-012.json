@@ -1,7 +1,7 @@
 {
   "reel_id": "nfs-reel-012",
   "pipeline_version": 2,
-  "revision": 1,
+  "revision": 2,
   "output": "nfs-reel-012-final.mp4",
   "secure_handoff": "secure-handoffs/nfs-reel-012.json.enc",
   "width": 1080,
@@ -26,7 +26,7 @@
     {"file":"look-01.mp4","source_start":3.00,"source_end":3.80,"target_seconds":0.80,"zoom":1.02}
   ],
   "overlays": [
-    {"text":"SAME SMART-CASUAL FORMULA.\nFOUR COMPLETELY DIFFERENT MOODS.","start":0.00,"end":1.35,"position":"top","font_size":42},
-    {"text":"WHICH COLOR COMBO WINS?\n1, 2, 3 OR 4?","start":7.44,"end":8.24,"position":"top","font_size":48}
+    {"text":"SAME SMART-CASUAL FORMULA.\nFOUR COMPLETELY DIFFERENT MOODS.","start":0.00,"end":1.35,"position":"top","font_size":54},
+    {"text":"WHICH COLOR COMBO WINS?\n1, 2, 3 OR 4?","start":7.44,"end":8.24,"position":"top","font_size":58}
   ]
 }
