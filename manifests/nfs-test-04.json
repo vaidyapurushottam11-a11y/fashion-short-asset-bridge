@@ -1,0 +1,36 @@
+{
+  "reel_id": "nfs-test-04",
+  "asset_release_tag": "nfs-reel-012-assets",
+  "pipeline_version": 2,
+  "revision": 1,
+  "output": "nfs-test-04-final.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "min_speed": 0.5,
+  "max_speed": 2.0,
+  "text_safe_margin_x": 110,
+  "text_safe_top": 180,
+  "text_safe_bottom": 340,
+  "transition_style": "cut",
+  "transition_seconds": 0.0,
+  "clips": [
+    {"file":"look-01.mp4","source_start":1.18,"source_end":1.38,"target_seconds":0.20,"zoom":1.10},
+    {"file":"look-02.mp4","source_start":1.18,"source_end":1.38,"target_seconds":0.20,"zoom":1.04},
+    {"file":"look-03.mp4","source_start":1.18,"source_end":1.38,"target_seconds":0.20,"zoom":1.08},
+    {"file":"look-04.mp4","source_start":1.18,"source_end":1.38,"target_seconds":0.20,"zoom":1.02},
+    {"file":"look-03.mp4","source_start":1.52,"source_end":2.62,"target_seconds":1.10,"zoom":1.00},
+    {"file":"look-01.mp4","source_start":1.52,"source_end":2.62,"target_seconds":1.10,"zoom":1.05},
+    {"file":"look-04.mp4","source_start":1.52,"source_end":2.62,"target_seconds":1.10,"zoom":1.00},
+    {"file":"look-02.mp4","source_start":1.52,"source_end":3.12,"target_seconds":1.60,"zoom":1.06},
+    {"file":"look-02.mp4","source_start":3.14,"source_end":3.84,"target_seconds":0.70,"zoom":1.10}
+  ],
+  "overlays": [
+    {"text":"YOU CAN ONLY\nKEEP ONE.","start":0.00,"end":1.10,"position":"top","font_size":66},
+    {"text":"OUT?","start":0.80,"end":1.90,"position":"top","font_size":60},
+    {"text":"OUT?","start":1.90,"end":3.00,"position":"top","font_size":60},
+    {"text":"OUT?","start":3.00,"end":4.10,"position":"top","font_size":60},
+    {"text":"FINAL PICK","start":4.10,"end":5.70,"position":"top","font_size":62},
+    {"text":"WHICH ONE SURVIVES?","start":5.70,"end":6.40,"position":"top","font_size":52}
+  ]
+}
