@@ -44,7 +44,10 @@ jobs:
           test -f "$MANIFEST_PATH"
           REEL_ID=$(jq -r '.reel_id // empty' "$MANIFEST_PATH")
           test -n "$REEL_ID"
-          RELEASE_TAG="${REEL_ID}-assets"
+          RELEASE_TAG=$(jq -r '.asset_release_tag // empty' "$MANIFEST_PATH")
+          if [ -z "$RELEASE_TAG" ]; then
+            RELEASE_TAG="${REEL_ID}-assets"
+          fi
           HANDOFF_PATH=$(jq -r '.secure_handoff // empty' "$MANIFEST_PATH")
           echo "manifest=$MANIFEST_PATH" >> "$GITHUB_OUTPUT"
           echo "reel_id=$REEL_ID" >> "$GITHUB_OUTPUT"
