@@ -48,13 +48,16 @@ def build_ass(manifest, path, width, height):
     overlays = manifest.get('overlays', [])
     if not overlays:
         return None
-    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans,72,&H00FFFFFF,&H000000FF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,4,0,8,90,90,250,1\nStyle: Center,DejaVu Sans,72,&H00FFFFFF,&H000000FF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,4,0,5,90,90,0,1\nStyle: Bottom,DejaVu Sans,64,&H00FFFFFF,&H000000FF,&H00101010,&H78000000,-1,0,0,0,100,100,0,0,1,4,0,2,90,90,300,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
+    # Canonical No Face Style Reel typography:
+    # condensed/mono-like uppercase white, italic/slanted, understated,
+    # no background plate, subtle dark outline + soft shadow, upper safe zone.
+    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans Condensed,58,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,0,-1,0,0,82,100,1,0,1,3,2,8,110,110,205,1\nStyle: Center,DejaVu Sans Condensed,58,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,0,-1,0,0,82,100,1,0,1,3,2,5,110,110,0,1\nStyle: Bottom,DejaVu Sans Condensed,54,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,0,-1,0,0,82,100,1,0,1,3,2,2,110,110,340,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
     lines = [header]
     for item in overlays:
         style = {'top':'Top','center':'Center','bottom':'Bottom'}.get(item.get('position','top'),'Top')
         start = ass_time(item['start'])
         end = ass_time(item['end'])
-        size = int(item.get('font_size', 72))
+        size = int(item.get('font_size', 58))
         text = ass_escape(item['text'])
         lines.append(f'Dialogue: 0,{start},{end},{style},,0,0,0,,{{\\fs{size}}}{text}\n')
     path.write_text(''.join(lines), encoding='utf-8')
