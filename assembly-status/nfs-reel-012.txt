@@ -1,5 +1,5 @@
 reel=nfs-reel-012
-duration=8.300
+duration=7.467
 resolution=1080x1920
 video_codec=h264
 audio_stream=NONE
