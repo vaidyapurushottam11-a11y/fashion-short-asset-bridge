@@ -2,7 +2,7 @@
   "reel_id": "nfs-test-03",
   "asset_release_tag": "nfs-reel-012-assets",
   "pipeline_version": 2,
-  "revision": 1,
+  "revision": 2,
   "output": "nfs-test-03-final.mp4",
   "width": 1080,
   "height": 1920,
