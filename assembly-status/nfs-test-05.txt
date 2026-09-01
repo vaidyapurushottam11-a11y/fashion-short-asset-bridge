@@ -1,0 +1,7 @@
+reel=nfs-test-05
+duration=6.000
+resolution=1080x1920
+video_codec=h264
+audio_stream=NONE
+technical_status=PASS
+editorial_status=PENDING_REVIEW
