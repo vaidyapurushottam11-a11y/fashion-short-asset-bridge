@@ -48,10 +48,10 @@ def build_ass(manifest, path, width, height):
     overlays = manifest.get('overlays', [])
     if not overlays:
         return None
-    # Canonical No Face Style Reel typography:
-    # condensed/mono-like uppercase white, italic/slanted, understated,
-    # no background plate, subtle dark outline + soft shadow, upper safe zone.
-    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans Condensed,58,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,0,-1,0,0,82,100,1,0,1,3,2,8,110,110,205,1\nStyle: Center,DejaVu Sans Condensed,58,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,0,-1,0,0,82,100,1,0,1,3,2,5,110,110,0,1\nStyle: Bottom,DejaVu Sans Condensed,54,&H00FFFFFF,&H000000FF,&H00101010,&H00000000,0,-1,0,0,82,100,1,0,1,3,2,2,110,110,340,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
+    # No Face Style editorial typography with readability-first backing plate:
+    # condensed uppercase white, italic/slanted, centered in upper safe zone,
+    # with a restrained semi-transparent dark background box for contrast.
+    header = f'''[Script Info]\nScriptType: v4.00+\nPlayResX: {width}\nPlayResY: {height}\nWrapStyle: 2\nScaledBorderAndShadow: yes\n\n[V4+ Styles]\nFormat: Name,Fontname,Fontsize,PrimaryColour,SecondaryColour,OutlineColour,BackColour,Bold,Italic,Underline,StrikeOut,ScaleX,ScaleY,Spacing,Angle,BorderStyle,Outline,Shadow,Alignment,MarginL,MarginR,MarginV,Encoding\nStyle: Top,DejaVu Sans Condensed,58,&H00FFFFFF,&H000000FF,&H00101010,&H70000000,0,-1,0,0,84,100,1,0,3,2,1,8,105,105,205,1\nStyle: Center,DejaVu Sans Condensed,58,&H00FFFFFF,&H000000FF,&H00101010,&H70000000,0,-1,0,0,84,100,1,0,3,2,1,5,105,105,0,1\nStyle: Bottom,DejaVu Sans Condensed,54,&H00FFFFFF,&H000000FF,&H00101010,&H70000000,0,-1,0,0,84,100,1,0,3,2,1,2,105,105,340,1\n\n[Events]\nFormat: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text\n'''
     lines = [header]
     for item in overlays:
         style = {'top':'Top','center':'Center','bottom':'Bottom'}.get(item.get('position','top'),'Top')
