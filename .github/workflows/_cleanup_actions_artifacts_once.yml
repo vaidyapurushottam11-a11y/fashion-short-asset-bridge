@@ -1,0 +1,35 @@
+name: One-time cleanup Actions artifacts
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/_cleanup_actions_artifacts_once.yml'
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete all Actions artifacts in this repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ids="$(gh api --paginate "repos/$GITHUB_REPOSITORY/actions/artifacts?per_page=100" --jq '.artifacts[].id')"
+          if [ -z "$ids" ]; then
+            echo "No Actions artifacts found."
+            exit 0
+          fi
+          count=0
+          while IFS= read -r id; do
+            [ -n "$id" ] || continue
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/actions/artifacts/$id"
+            count=$((count + 1))
+          done <<< "$ids"
+          echo "Deleted $count Actions artifacts."
